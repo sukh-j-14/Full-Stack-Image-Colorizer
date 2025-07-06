@@ -126,7 +126,3 @@ python colorize.py
 - [Material UI](https://mui.com/)
 
 ---
-
-## License
-
-MIT License 
