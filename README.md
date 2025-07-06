@@ -12,6 +12,13 @@ A web application that colorizes black & white images using deep learning. The p
 - FastAPI backend with MongoDB for upload history.
 - Uses OpenCV and a pre-trained Caffe model for colorization.
 
+## Tech Stack
+
+- **Frontend:** React, Material UI, Axios
+- **Backend:** FastAPI, Python, OpenCV, NumPy, PyMongo
+- **Database:** MongoDB
+- **Model:** Pre-trained Caffe model for image colorization
+
 ---
 
 ## Project Structure
