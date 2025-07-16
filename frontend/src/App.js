@@ -32,6 +32,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const API_URL = process.env.REACT_APP_API_URL;
+
   // Handle file selection or drop
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -71,11 +73,11 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      const res = await axios.post('http://127.0.0.1:8000/upload', formData, {
+      const res = await axios.post(`${API_URL}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const colorizedFilename = res.data.colorized_filename;
-      setColorizedUrl(`http://127.0.0.1:8000/download/${colorizedFilename}?type=colorized`);
+      setColorizedUrl(`${API_URL}/download/${colorizedFilename}?type=colorized`);
       fetchHistory();
     } catch (err) {
       setError('Upload failed.');
@@ -86,7 +88,7 @@ function App() {
   // Add this function to handle deleting an upload
   const handleDelete = async (saved_filename) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/history/${saved_filename}`);
+      await axios.delete(`${API_URL}/history/${saved_filename}`);
       fetchHistory();
     } catch (err) {
       setError('Delete failed.');
@@ -94,18 +96,18 @@ function App() {
   };
 
   // Fetch upload history
-  const fetchHistory = async () => {
+  const fetchHistory = React.useCallback(async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/history');
+      const res = await axios.get(`${API_URL}/history`);
       setHistory(res.data);
     } catch (err) {
       setHistory([]);
     }
-  };
+  }, [API_URL]);
 
   React.useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [fetchHistory]);
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
@@ -239,7 +241,7 @@ function App() {
                         <Button
                           variant="outlined"
                           color="primary"
-                          href={`http://127.0.0.1:8000/download/${item.saved_filename}?type=upload`}
+                          href={`${API_URL}/download/${item.saved_filename}?type=upload`}
                           target="_blank"
                           startIcon={<DownloadIcon />}
                           size="small"
@@ -249,7 +251,7 @@ function App() {
                         <Button
                           variant="contained"
                           color="secondary"
-                          href={`http://127.0.0.1:8000/download/${item.colorized_filename}?type=colorized`}
+                          href={`${API_URL}/download/${item.colorized_filename}?type=colorized`}
                           target="_blank"
                           startIcon={<DownloadIcon />}
                           size="small"
