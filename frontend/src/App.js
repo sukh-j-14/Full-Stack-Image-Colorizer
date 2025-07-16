@@ -21,6 +21,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DownloadIcon from '@mui/icons-material/Download';
 import ImageIcon from '@mui/icons-material/Image';
 import HistoryIcon from '@mui/icons-material/History';
+import DeleteIcon from '@mui/icons-material/Delete';
 import './App.css';
 
 function App() {
@@ -80,6 +81,16 @@ function App() {
       setError('Upload failed.');
     }
     setLoading(false);
+  };
+
+  // Add this function to handle deleting an upload
+  const handleDelete = async (saved_filename) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/history/${saved_filename}`);
+      fetchHistory();
+    } catch (err) {
+      setError('Delete failed.');
+    }
   };
 
   // Fetch upload history
@@ -220,6 +231,9 @@ function App() {
                             {new Date(item.upload_time).toLocaleString()}
                           </Typography>
                         </Box>
+                        <IconButton aria-label="delete" color="error" sx={{ ml: 'auto' }} onClick={() => handleDelete(item.saved_filename)}>
+                          <DeleteIcon />
+                        </IconButton>
                       </Box>
                       <Box display="flex" gap={1} mt={2}>
                         <Button

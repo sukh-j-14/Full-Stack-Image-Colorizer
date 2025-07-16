@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Query
+from fastapi import FastAPI, File, UploadFile, Query, status
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -82,12 +82,28 @@ async def upload_image(file: UploadFile = File(...)):
 
 @app.get("/history")
 def get_history():
-    records = list(uploads_collection.find({}, {"_id": 0, "original_filename": 1, "saved_filename": 1, "upload_time": 1}).sort("upload_time", -1))
+    records = list(uploads_collection.find({}, {"_id": 0, "original_filename": 1, "saved_filename": 1, "colorized_filename": 1, "upload_time": 1}).sort("upload_time", -1))
     # Convert upload_time to ISO string
     for r in records:
         if "upload_time" in r:
             r["upload_time"] = r["upload_time"].isoformat()
     return JSONResponse(records)
+
+@app.delete("/history/{saved_filename}")
+def delete_upload(saved_filename: str):
+    record = uploads_collection.find_one({"saved_filename": saved_filename})
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    # Remove files
+    upload_path = os.path.join(UPLOAD_DIR, saved_filename)
+    colorized_path = os.path.join(COLORIZED_DIR, record.get("colorized_filename", ""))
+    if os.path.exists(upload_path):
+        os.remove(upload_path)
+    if os.path.exists(colorized_path):
+        os.remove(colorized_path)
+    # Remove from DB
+    uploads_collection.delete_one({"saved_filename": saved_filename})
+    return JSONResponse({"message": "Upload deleted."}, status_code=status.HTTP_200_OK)
 
 @app.get("/download/{filename}")
 def download_image(filename: str, type: str = Query("colorized", enum=["colorized", "upload"])):
