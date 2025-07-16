@@ -44,9 +44,9 @@ async def upload_image(file: UploadFile = File(...)):
         content = await file.read()
         f.write(content)
     # Colorization logic
-    prototxt_path = '../colorization_deploy_v2.prototxt'
-    model_path = '../colorization_release_v2.caffemodel'
-    pts_in_hull_path = '../pts_in_hull.npy'
+    prototxt_path = 'colorization_deploy_v2.prototxt'
+    model_path = 'colorization_release_v2.caffemodel'
+    pts_in_hull_path = 'pts_in_hull.npy'
     net = cv2.dnn.readNetFromCaffe(prototxt_path, model_path)
     pts_in_hull = np.load(pts_in_hull_path)
     class8 = net.getLayerId("class8_ab")
