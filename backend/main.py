@@ -26,7 +26,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(COLORIZED_DIR, exist_ok=True)
 
 # MongoDB setup
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = os.environ.get("MONGO_URI")
+if not MONGO_URI:
+    raise RuntimeError("MONGO_URI environment variable not set!")
 DB_NAME = "colorization"
 COLLECTION_NAME = "uploads"
 
