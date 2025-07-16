@@ -1,2 +1,12 @@
-/.vscode
-/backend/venv
+# VSCode settings (optional)
+.vscode/
+
+# Python virtual environment
+backend/venv/
+
+# Python bytecode cache
+backend/__pycache__/
+
+# Runtime data (uploads and generated images)
+backend/uploads/
+backend/colorized/
