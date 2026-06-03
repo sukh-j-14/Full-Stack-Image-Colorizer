@@ -133,3 +133,11 @@ python colorize.py
 - [Material UI](https://mui.com/)
 
 ---
+
+cd backend
+export MONGO_URI="mongodb://localhost:27017"
+./venv/bin/uvicorn main:app --reload --port 8000
+
+
+cd frontend
+npm start
