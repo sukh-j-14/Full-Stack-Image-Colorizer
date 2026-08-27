@@ -1,143 +1,105 @@
-# Image Colorization Project
+# Chromora — AI Image Colorizer
 
-A web application that colorizes black & white images using deep learning. The project features a React frontend, a FastAPI backend, and leverages OpenCV's deep learning module with a pre-trained Caffe model for colorization.
+Turn black-and-white photographs into naturally colorized images with deep learning, directly in your browser.
 
----
+**Live application:** [full-stack-image-colorizer.vercel.app](https://full-stack-image-colorizer.vercel.app)
 
-## Features
+## Highlights
 
-- Upload black & white images and receive colorized versions.
-- View and download your upload and colorization history.
-- Modern, responsive React frontend (Material UI).
-- FastAPI backend with MongoDB for upload history.
-- Uses OpenCV and a pre-trained Caffe model for colorization.
+- Drag-and-drop image upload with an instant preview
+- AI colorization powered by the Zhang et al. model exported to ONNX
+- Side-by-side original and colorized results
+- One-click JPEG download
+- Responsive React interface with session history
+- A single Vercel deployment for both the frontend and API
 
-## Tech Stack
+## How it works
 
-- **Frontend:** React, Material UI, Axios
-- **Backend:** FastAPI, Python, OpenCV, NumPy, PyMongo
-- **Database:** MongoDB
-- **Model:** Pre-trained Caffe model for image colorization
+The React client sends the selected image to a FastAPI function. The function converts the image to CIE Lab color space, runs the luminance channel through the ONNX colorization network, combines the predicted color channels with the original luminance, and returns a JPEG.
 
----
+The original Caffe weights are about 129 MB. Bundling those weights with OpenCV made the serverless function too large for Vercel. The production implementation solves this by:
 
-## Project Structure
+1. Using the equivalent ONNX model with the lighter ONNX Runtime dependency.
+2. Keeping the model outside the deployment bundle.
+3. Downloading it to Vercel's temporary storage on the first request of a function instance.
+4. Reusing that cached file for subsequent requests on the warm instance.
 
-```
+The first request after a cold start can therefore take longer than later requests.
+
+## Technology
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | React, Material UI, Axios |
+| API | FastAPI, Python, Pillow, NumPy |
+| Inference | ONNX Runtime |
+| Hosting | Vercel |
+
+## Project structure
+
+```text
 .
-├── backend/         # FastAPI backend (Python)
-│   ├── main.py
-│   ├── uploads/
-│   ├── colorized/
-│   └── ...
-├── frontend/        # React frontend (JavaScript)
-│   ├── src/
+├── api/
+│   └── index.py           # Production FastAPI and ONNX inference
+├── backend/               # Original/local Python implementation
+├── frontend/
 │   ├── public/
-│   └── package.json
-├── colorization_deploy_v2.prototxt
-├── colorization_release_v2.caffemodel
-├── pts_in_hull.npy
-├── colorize.py      # Standalone colorization script (for testing)
-└── ...
+│   └── src/               # React application
+├── requirements.txt       # Production Python dependencies
+└── vercel.json            # Build and routing configuration
 ```
 
----
+## Run locally
 
-## Setup Instructions
+### Requirements
 
-### Prerequisites
+- Python 3.12
+- Node.js 18 or newer
 
-- Python 3.8+
-- Node.js (v16+ recommended)
-- MongoDB (running locally on default port)
-- pip, npm
+### Start the API
 
-### 1. Backend Setup
-
-1. **Create a virtual environment and activate it:**
-   ```bash
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install fastapi uvicorn pymongo opencv-python numpy
-   ```
-
-3. **Start the FastAPI server:**
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-   The backend will run at `http://127.0.0.1:8000`.
-
-### 2. Frontend Setup
-
-1. **Install dependencies:**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-2. **Start the React development server:**
-   ```bash
-   npm start
-   ```
-
-   The frontend will run at `http://localhost:3000` and communicate with the backend.
-
-### 3. Model Files
-
-Ensure the following files are present in the project root (already included):
-
-- `colorization_deploy_v2.prototxt`
-- `colorization_release_v2.caffemodel`
-- `pts_in_hull.npy`
-
----
-
-## Usage
-
-1. Open the frontend in your browser (`http://localhost:3000`).
-2. Upload a black & white image.
-3. Wait for the colorized result and download it if desired.
-4. View your upload and colorization history.
-
----
-
-## Standalone Script
-
-You can also use `colorize.py` to colorize a single image from the command line. Edit the `input_image_path` variable in the script and run:
+From the project root:
 
 ```bash
-python colorize.py
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn api.index:app --reload --port 8000
 ```
 
----
+The model is downloaded automatically on the first colorization request. To use another model host, set `MODEL_URL` to a direct HTTPS URL for the compatible ONNX file.
 
-## API Endpoints
+### Start the frontend
 
-- `POST /upload` — Upload an image for colorization.
-- `GET /history` — Retrieve upload and colorization history.
-- `GET /download/{filename}?type=colorized|upload` — Download colorized or original images.
+In a second terminal:
 
----
-
-## Acknowledgements
-
-- [OpenCV DNN Colorization Model](https://github.com/richzhang/colorization)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [React](https://react.dev/)
-- [Material UI](https://mui.com/)
-
----
-
-cd backend
-export MONGO_URI="mongodb://localhost:27017"
-./venv/bin/uvicorn main:app --reload --port 8000
-
-
+```bash
 cd frontend
+npm install
 npm start
+```
+
+Open `http://localhost:3000`. Development requests use `http://localhost:8000`; production uses the same-origin `/api` route.
+
+## API
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Check API status |
+| `POST` | `/api/upload` | Upload and colorize an image |
+
+Uploads are limited to 10 MB. Large images are resized to a maximum processing edge of 1600 pixels to keep inference reliable in a serverless environment.
+
+## Deploy to Vercel
+
+Import the repository in Vercel or deploy it from the repository root:
+
+```bash
+npx vercel --prod
+```
+
+No database is required. Results are returned directly to the browser and recent items exist only in the current browser session.
+
+## Model attribution
+
+The colorization network is based on [Colorful Image Colorization](https://richzhang.github.io/colorization/) by Richard Zhang, Phillip Isola, and Alexei A. Efros. Model output is an AI-generated estimate: historically accurate colors are not guaranteed.

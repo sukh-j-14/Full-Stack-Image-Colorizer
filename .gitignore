@@ -10,3 +10,15 @@ backend/__pycache__/
 # Runtime data (uploads and generated images)
 backend/uploads/
 backend/colorized/
+
+# Local configuration and Vercel metadata
+.env*
+.vercel/
+frontend/.npm-cache/
+frontend/node_modules/
+frontend/build/
+
+# The model is fetched into /tmp by the production function.
+backend/colorization_release_v2.caffemodel
+
+.vercel

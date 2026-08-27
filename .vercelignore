@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+backend/colorization_release_v2.caffemodel
+backend/main.py
+backend/requirements.txt
+backend/uploads
+backend/colorized
+frontend/node_modules
+frontend/.npm-cache
+frontend/build
+mongodb_data
+bfg-1.14.0.jar
+sample.mp4
+test_bw.jpg
+colorize.py
